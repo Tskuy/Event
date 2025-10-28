@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=0.7, maximum-scale=1.5, user-scalable=yes">
+<title>Giveaway Spinner — Multi Cycle + Registrasi + Claim WA</title>
+<style>
+:root{
+  --blue:#2e7dff; --green:#16a34a; --border:#e5e7eb; --text:#111; --muted:#6b7280; --bg:rgba(255,255,255,.88);
+  --radius:14px; --shadow:0 6px 20px rgba(0,0,0,.08);
+  --maxw:900px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background: linear-gradient(180deg,#f3f4f6,#e5e7eb); /* fallback */
+  background-attachment: fixed; background-size: cover; background-position:center;
+}
+
+/* Shell */
+.wrap{max-width:var(--maxw);margin:24px auto;padding:16px}
+.card{background:var(--bg);backdrop-filter: blur(6px);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.title{font-weight:800;font-size:20px}
+.status{font-size:13px;color:var(--muted)}
+
+/* Ads */
+.ad{display:block;text-align:center;margin:12px 0}
+.ad img{max-width:100%;height:auto;border-radius:10px;border:1px solid var(--border)}
+
+/* Board */
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.slot{
+  padding:16px;border:1px solid var(--border);border-radius:12px;background:#fff;text-align:center;
+  font-weight:800;font-size:15px;user-select:none;transition:transform .08s ease, background .08s ease, box-shadow .08s ease, color .08s ease;
+}
+.slot small{display:none;font-weight:600;color:#6b7280;font-size:0px;margin-top:4px}
+.slot.active{background:var(--blue);color:#fff;transform:scale(1.05);box-shadow:0 6px 16px rgba(46,125,255,.25)}
+.slot.winner{background:var(--green);color:#fff;transform:scale(1.08);box-shadow:0 8px 22px rgba(22,163,74,.28)}
+
+/* Start Button */
+.actions{display:flex;align-items:center;justify-content:center;margin:10px 0}
+.btn{
+  padding:12px 18px;border-radius:10px;border:2px solid var(--blue);background:var(--blue);color:#fff;font-weight:800;cursor:pointer
+}
+.btn[disabled]{opacity:.6;cursor:not-allowed}
+.note{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* Popup Claim */
+#claimOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center;z-index:2000;padding:16px
+}
+#claimBox{width:min(92vw,520px);background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.claim-body{padding:16px}
+.claim-title{font-weight:900;font-size:18px;margin-bottom:6px}
+.claim-text{font-size:14px;color:#374151;margin-bottom:14px;white-space:pre-line}
+.claim-actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn-claim{padding:10px 14px;border-radius:10px;border:2px solid #16a34a;background:#16a34a;color:#fff;font-weight:800;cursor:pointer}
+.btn-close{padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:#fff;color:#111;font-weight:700;cursor:pointer}
+
+/* Popup Registrasi */
+#regOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;z-index:3000;padding:16px
+}
+#regBox{width:min(92vw,460px);background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.reg-body{padding:16px}
+.reg-title{font-weight:900;font-size:18px;margin-bottom:10px}
+.reg-text{font-size:14px;color:#374151;margin-bottom:14px}
+.reg-field{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.reg-input{flex:1 1 200px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px}
+.reg-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-verify{padding:10px 14px;border-radius:10px;border:2px solid var(--blue);background:var(--blue);color:#fff;font-weight:800;cursor:pointer}
+.btn-contact{padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:#fff;color:#111;font-weight:700;cursor:pointer}
+.reg-error{color:#dc2626;font-size:13px;margin-top:8px;min-height:18px}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .35s linear}
+
+/* Audio badge */
+#audioBadge{
+  position:fixed;right:12px;bottom:12px;z-index:10;
+  padding:8px 12px;border:0;border-radius:999px;background:rgba(0,0,0,.65);color:#fff;font:600 13px/1.2 system-ui;cursor:pointer;display:none
+}
+</style>
+</head>
+<body>
+
+<!-- Musik: nyala di klik pertama -->
+<audio id="bgm" preload="auto" playsinline>
+  <!-- Ganti AUDIO_URL di script bila perlu -->
+  <source id="bgmSrc" src="" type="audio/mpeg">
+</audio>
+<button id="audioBadge" type="button">♪ Musik menyala</button>
+
+<!-- Popup Registrasi -->
+<div id="regOverlay" role="dialog" aria-modal="true" aria-label="Registrasi Giveaway">
+  <div id="regBox">
+    <div class="reg-body">
+      <div class="reg-title">🔒 Registrasi Giveaway</div>
+      <div class="reg-text">
+        Masukan kode Registrasi Giveaway:<br>
+        <small style="color:#6b7280">Kode ini diperlukan untuk menutup popup.</small><br><br>
+        Jika tidak memilikinya, hubungi admin untuk mendapatkannya.
+      </div>
+      <div class="reg-field">
+        <input id="regInput" class="reg-input" type="password" inputmode="numeric" placeholder="Masukkan kode di sini">
+        <button id="regVerify" class="btn-verify">Verifikasi</button>
+      </div>
+      <div class="reg-actions">
+        <button id="regContact" class="btn-contact">Hubungi Admin</button>
+      </div>
+      <div id="regError" class="reg-error"></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="card" aria-hidden="true" id="mainCard">
+    <div class="topbar">
+      <div class="title">🎁 Giveaway Spinner</div>
+      <div id="gwStatus" class="status">Klik START untuk memulai</div>
+    </div>
+
+    <!-- Banner Atas -->
+    <div class="ad">
+      <img src="https://hisoka.net/file/IMG-20250910-WA0124.jpg" alt="Banner Atas">
+    </div>
+
+    <!-- Papan Spinner -->
+    <div id="gwBoard" class="board"></div>
+
+    <div class="actions">
+      <button id="gwStart" class="btn"> START </button>
+    </div>
+
+    <!-- Banner Bawah -->
+    <div class="ad">
+      <img src="https://hisoka.net/file/IMG-20251003-WA0020.jpg" alt="Banner Bawah">
+    </div>
+
+    <div class="note">* Sistem diatur satu kali (best-effort). Hasil akan terkunci.</div>
+  </div>
+</div>
+
+<!-- Popup Claim -->
+<div id="claimOverlay" role="dialog" aria-modal="true" aria-label="Claim hadiah" style="display:none">
+  <div id="claimBox">
+    <div class="claim-body">
+      <div class="claim-title">🎉 Selamat!</div>
+      <div id="claimText" class="claim-text"></div>
+      <div class="claim-actions">
+        <button id="btnClaim" class="btn-claim">Claim</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ====== VERSI (Cycle) — ubah angka ini untuk “refresh semua orang” ====== */
+  let CYCLE_ID = 1; // ← GANTI ke 2, 3, ... saat mau reset global
+  // (Opsional) override via URL ?cycle=5
+  try{
+    const sp = new URLSearchParams(location.search);
+    const ov = sp.get('cycle');
+    if (ov && /^\d+$/.test(ov)) CYCLE_ID = Number(ov);
+  }catch(e){}
+  const SUFFIX    = `_cycle_${CYCLE_ID}`;
+  const DB_NAME   = `gwDB${SUFFIX}`;
+  const CACHE_NAME= `gwCache${SUFFIX}`;
+
+  /* ===================== KONFIG ===================== */
+  // Background & Musik
+  const BG_URL    = "https://hisoka.net/file/Coklat-Aesthetic-Photo-Collage-Instagram-Story_20241123_052643_0000.png"; // ganti bila perlu
+  const AUDIO_URL = "#"; // ganti bila perlu
+
+  // Password registrasi per siklus (ubah sesuka hati)
+  const REG_CODE_MAP = {
+    1: '10250',
+  };
+  const REG_CODE = REG_CODE_MAP[CYCLE_ID] || '10250';
+
+  // Penyimpanan (versioned by cycle)
+  const REG_KEY     = `gw_reg_ok${SUFFIX}`;
+  const STORAGE_KEY = `gw_played${SUFFIX}`;
+  const STORAGE_VAL = 'played';
+  const RESULT_KEY  = `gw_result${SUFFIX}`;
+
+  // WhatsApp tujuan
+  const WA_NUMBER_E164 = '6283847540571';
+
+  // Daftar 12 tombol + persen (total 100). Bebas kamu ubah nilainya.
+  const OPTIONS = [
+    {key:'CANVA',    pct:70},
+    {key:'VIDIO',    pct: 0},
+    {key:'VIU',      pct:0},
+    {key:'DUOLINGO', pct:14},
+    {key:'NETFLIX',  pct: 0},
+    {key:'YOUTUBE',  pct: 5},
+    {key:'CAPCUT',   pct: 2},
+    {key:'CHATGPT',  pct: 0},
+    {key:'SPOTIFY',  pct: 1},
+    {key:'A.MUSIC',  pct: 5},
+    {key:'ZOOM',     pct: 3},
+    {key:'GEMINI',   pct: 0},
+  ];
+  const PCT_MAP = Object.fromEntries(OPTIONS.map(o=>[o.key,o.pct]));
+  const ALL_LIST = OPTIONS.map(o=>o.key);
+  const SPIN_DURATION_MS = 11000;
+
+  /* ===================== BACKGROUND & AUDIO ===================== */
+  (function loadBg(){
+    if(!BG_URL) return;
+    const img = new Image();
+    img.onload = ()=>{ document.body.style.backgroundImage = `url('${BG_URL}')`; };
+    img.onerror = ()=>{};
+    img.src = BG_URL;
+  })();
+  (function setAudio(){
+    const s = document.getElementById('bgmSrc');
+    if (s) s.src = AUDIO_URL || '';
+  })();
+
+  /* ===================== DOM ===================== */
+  const regOverlay = document.getElementById('regOverlay');
+  const regInput   = document.getElementById('regInput');
+  const regVerify  = document.getElementById('regVerify');
+  const regContact = document.getElementById('regContact');
+  const regError   = document.getElementById('regError');
+  const mainCard   = document.getElementById('mainCard');
+
+  const board    = document.getElementById('gwBoard');
+  const startBtn = document.getElementById('gwStart');
+  const statusEl = document.getElementById('gwStatus');
+
+  const claimOverlay = document.getElementById('claimOverlay');
+  const claimText    = document.getElementById('claimText');
+  const btnClaim     = document.getElementById('btnClaim');
+  const btnClose     = document.getElementById('btnClose');
+
+  const bgm          = document.getElementById('bgm');
+  const audioBadge   = document.getElementById('audioBadge');
+  let audioStarted   = false;
+
+  /* ===================== MUSIC FIRST INTERACTION ===================== */
+  function startMusicOnce(){
+    if(audioStarted) return;
+    audioStarted = true;
+    try{ bgm.muted = false; bgm.loop = true; }catch(e){}
+    bgm.play().then(()=>{
+      audioBadge.textContent = '♪ Musik menyala';
+      audioBadge.style.display = 'inline-block';
+      setTimeout(()=>{ audioBadge.style.display='none'; }, 2500);
+    }).catch(()=>{});
+    document.removeEventListener('click', startMusicOnce, true);
+    window.removeEventListener('pointerdown', startMusicOnce);
+    window.removeEventListener('keydown', startMusicOnce);
+  }
+  document.addEventListener('click', startMusicOnce, true);
+  window.addEventListener('pointerdown', startMusicOnce, {passive:true, once:true});
+  window.addEventListener('keydown', startMusicOnce, {once:true});
+
+  /* ===================== RENDER BOARD ===================== */
+  OPTIONS.forEach((opt,i)=>{
+    const el = document.createElement('div');
+    el.className = 'slot';
+    el.dataset.key = opt.key;
+    el.innerHTML = `${opt.key}<small>${opt.pct}%</small>`;
+    board.appendChild(el);
+  });
+  const slots = Array.from(board.querySelectorAll('.slot'));
+
+  /* ===================== STORAGE UTILS ===================== */
+  function setCookie(name,value,days){
+    try{
+      const d=new Date(); d.setTime(d.getTime()+ (days*24*60*60*1000));
+      document.cookie = name+"="+(value||"")+"; expires="+d.toUTCString()+"; path=/; SameSite=Lax";
+    }catch{}
+  }
+  function getCookie(name){
+    try{
+      const nameEQ = name + "=";
+      const ca = document.cookie.split(';');
+      for(let i=0;i<ca.length;i++){
+        let c = ca[i]; while(c.charAt(0)==' ') c = c.substring(1,c.length);
+        if(c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+      }
+    }catch{}
+    return null;
+  }
+  function idbSet(dbName, store, key, val){
+    return new Promise((resolve)=>{
+      const req = indexedDB.open(dbName,1);
+      req.onupgradeneeded = e=>{
+        const db=e.target.result;
+        if(!db.objectStoreNames.contains(store)) db.createObjectStore(store);
+      };
+      req.onsuccess = ()=>{
+        const db=req.result;
+        const tx=db.transaction(store,'readwrite');
+        tx.objectStore(store).put(val, key);
+        tx.oncomplete=()=>{ db.close(); resolve(true); };
+        tx.onerror=()=>{ db.close(); resolve(false); };
+      };
+      req.onerror = ()=> resolve(false);
+    });
+  }
+  function idbGet(dbName, store, key){
+    return new Promise((resolve)=>{
+      const req = indexedDB.open(dbName,1);
+      req.onupgradeneeded = e=>{
+        const db=e.target.result;
+        if(!db.objectStoreNames.contains(store)) db.createObjectStore(store);
+      };
+      req.onsuccess = ()=>{
+        const db=req.result;
+        const tx=db.transaction(store,'readonly');
+        const g=tx.objectStore(store).get(key);
+        g.onsuccess=()=>{ const v=g.result; db.close(); resolve(v); };
+        g.onerror=()=>{ db.close(); resolve(null); };
+      };
+      req.onerror = ()=> resolve(null);
+    });
+  }
+  async function cacheSet(cacheName, key, val){
+    try{
+      const c = await caches.open(cacheName);
+      const resp = new Response(val, { headers: {'Content-Type':'text/plain'} });
+      await c.put(new Request(location.origin+'/__gwflag__/'+key), resp);
+      return true;
+    }catch{ return false; }
+  }
+  async function cacheHas(cacheName, key){
+    try{
+      const c = await caches.open(cacheName);
+      const m = await c.match(location.origin+'/__gwflag__/'+key);
+      return !!m;
+    }catch{ return false; }
+  }
+
+  async function markPlayed(resultKey){
+    try { localStorage.setItem(STORAGE_KEY, STORAGE_VAL); } catch(e){}
+    try { sessionStorage.setItem(STORAGE_KEY, STORAGE_VAL); } catch(e){}
+    try { setCookie(STORAGE_KEY, STORAGE_VAL, 3650); } catch(e){}
+    try { await idbSet(DB_NAME,'flags', STORAGE_KEY, STORAGE_VAL); } catch(e){}
+    try { await cacheSet(CACHE_NAME, STORAGE_KEY, STORAGE_VAL); } catch(e){}
+    try { localStorage.setItem(RESULT_KEY, resultKey); } catch(e){}
+    try { await idbSet(DB_NAME,'flags', RESULT_KEY, resultKey); } catch(e){}
+  }
+  async function alreadyPlayed(){
+    try{ if(localStorage.getItem(STORAGE_KEY)===STORAGE_VAL) return true; }catch(e){}
+    try{ if(sessionStorage.getItem(STORAGE_KEY)===STORAGE_VAL) return true; }catch(e){}
+    try{ if(getCookie(STORAGE_KEY)===STORAGE_VAL) return true; }catch(e){}
+    try{ if(await idbGet(DB_NAME,'flags', STORAGE_KEY)) return true; }catch(e){}
+    try{ if(await cacheHas(CACHE_NAME, STORAGE_KEY)) return true; }catch(e){}
+    return false;
+  }
+  async function getSavedResult(){
+    try{
+      let r = localStorage.getItem(RESULT_KEY);
+      if(r) return r;
+      r = await idbGet(DB_NAME,'flags', RESULT_KEY);
+      return r || null;
+    }catch(e){ return null; }
+  }
+
+  /* ===================== REGISTRASI ===================== */
+  function waAdminLink(){
+    const msg = "Halo kak, saya ingin mendapatkan kode registrasi Giveaway. Boleh kah saya ikut event bulan ini?\nTerima kasih kak";
+    return 'https://api.whatsapp.com/send?phone=' + WA_NUMBER_E164 + '&text=' + encodeURIComponent(msg);
+  }
+  regContact.addEventListener('click', ()=>{ window.open(waAdminLink(), '_blank', 'noopener'); });
+
+  function setRegOK(){
+    try{ localStorage.setItem(REG_KEY, 'ok'); }catch(e){}
+    try{ sessionStorage.setItem(REG_KEY, 'ok'); }catch(e){}
+    try{ setCookie(REG_KEY, 'ok', 3650); }catch(e){}
+    regOverlay.style.display = 'none';
+    mainCard.removeAttribute('aria-hidden');
+    regError.textContent = '';
+  }
+  function isRegOK(){
+    try{ if(localStorage.getItem(REG_KEY)==='ok') return true; }catch(e){}
+    try{ if(sessionStorage.getItem(REG_KEY)==='ok') return true; }catch(e){}
+    try{ if(getCookie(REG_KEY)==='ok') return true; }catch(e){}
+    return false;
+  }
+  function verifyReg(){
+    const v = (regInput.value||'').trim();
+    if(v===REG_CODE){ setRegOK(); }
+    else{
+      regError.textContent = 'Kode salah. Silakan periksa kembali.';
+      const box = document.getElementById('regBox');
+      box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+      regInput.focus(); regInput.select?.();
+    }
+  }
+  regVerify.addEventListener('click', verifyReg);
+  regInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ verifyReg(); } });
+
+  if(isRegOK()){
+    regOverlay.style.display = 'none';
+    mainCard.removeAttribute('aria-hidden');
+  }else{
+    regOverlay.style.display = 'flex';
+    mainCard.setAttribute('aria-hidden','true');
+    setTimeout(()=>{ regInput.focus(); }, 50);
+  }
+
+  /* ===================== FORMATTER ===================== */
+  function formatNowJakarta(){
+    try{
+      const now = new Date();
+      const d = new Intl.DateTimeFormat('id-ID', { timeZone:'Asia/Jakarta', day:'2-digit', month:'long', year:'numeric'}).format(now);
+      const t = new Intl.DateTimeFormat('id-ID', { timeZone:'Asia/Jakarta', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }).format(now);
+      const tDots = t.replaceAll(':','.');
+      return `${d} pukul ${tDots} WIB`;
+    }catch{
+      const s = new Date().toLocaleString('id-ID');
+      return `${s} WIB`;
+    }
+  }
+
+  function buildWaMessage(winnerKey){
+    const label = winnerKey;
+    const pct   = PCT_MAP[winnerKey] ?? '?';
+    const idx   = ALL_LIST.indexOf(label) + 1; // nomor urut 1..12
+    const lines = [
+      `Halo kak, Yeaayyy aku dapat *Premium (${label})*. Ditunggu ya kak, Makasii >.<`,
+      `> ${label}.${idx}.${pct}.2025`,
+      `> Waktu: ${formatNowJakarta()}`
+    ];
+    return lines.join('\n');
+  }
+  function openWhatsAppWith(text){
+    const url = 'https://api.whatsapp.com/send?phone=' + WA_NUMBER_E164 + '&text=' + encodeURIComponent(text);
+    window.open(url, '_blank', 'noopener');
+  }
+
+  /* ===================== SPINNER ===================== */
+  function pickWeighted(){
+    const total = OPTIONS.reduce((a,b)=>a+b.pct,0);
+    const r = Math.random()*total;
+    let acc=0;
+    for(const o of OPTIONS){
+      acc += o.pct;
+      if(r <= acc) return o.key;
+    }
+    // fallback kalau semua 0 (hindari NaN)
+    const nonZero = OPTIONS.filter(o=>o.pct>0);
+    return (nonZero[0]?.key) || OPTIONS[0].key;
+  }
+  function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+
+  function showClaimPopup(winnerKey){
+    const label = winnerKey;
+    const pct   = PCT_MAP[winnerKey] ?? '?';
+    const msg   = buildWaMessage(winnerKey);
+
+    claimText.textContent =
+`Kamu mendapatkan Premium (${label}).
+Klik "Claim" untuk menerimanya.
+
+Rangkuman:
+  - Pilihan: ${label}
+  - Waktu: ${formatNowJakarta()}
+  [!] JANGAN LUPA SCREENSHOT, NO SCREENSHOT = HANGUS!!`;
+
+    claimOverlay.style.display = 'flex';
+    btnClaim.onclick = () => openWhatsAppWith(msg);
+    btnClose.onclick = () => { claimOverlay.style.display = 'none'; };
+    claimOverlay.addEventListener('click', (e)=>{
+      if(e.target === claimOverlay) claimOverlay.style.display = 'none';
+    }, { once:true });
+  }
+
+  async function lockForever(winner){
+    await markPlayed(winner);
+    startBtn.disabled = true;
+  }
+
+  function spinOnce(){
+    startMusicOnce();
+    startBtn.disabled = true;
+    startBtn.textContent = 'Spinning...';
+
+    const winner = pickWeighted();
+    const targetIndex = OPTIONS.findIndex(o=>o.key===winner);
+    const len = OPTIONS.length;
+
+    const baseSpins = 8;
+    const totalSteps = baseSpins*len + targetIndex;
+
+    const start = performance.now();
+    let lastStep = -1;
+
+    function frame(now){
+      const t = Math.min(1, (now - start)/SPIN_DURATION_MS);
+      const eased = easeOutCubic(t);
+      const step = Math.floor(eased * totalSteps);
+
+      if(step !== lastStep){
+        slots.forEach(s=>s.classList.remove('active','winner'));
+        const idx = step % len;
+        slots[idx].classList.add('active');
+        lastStep = step;
+      }
+
+      if(t < 1){
+        requestAnimationFrame(frame);
+      } else {
+        slots.forEach(s=>s.classList.remove('active','winner'));
+        const finalEl = slots[targetIndex];
+        finalEl.classList.add('winner');
+        startBtn.textContent = 'Selesai';
+        statusEl.textContent = 'Hasil: ' + winner;
+        lockForever(winner);
+        showClaimPopup(winner);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ===================== INIT ===================== */
+  document.getElementById('gwStart').addEventListener('click', startMusicOnce, {once:true});
+
+  (async function initGame(){
+    if(await alreadyPlayed()){
+      startBtn.disabled = true;
+      startBtn.textContent = 'Sudah mengikuti';
+      const r = await getSavedResult();
+      statusEl.textContent = r ? ('Hasil: ' + r) : 'Sudah mengikuti';
+      if(r){
+        const idx = OPTIONS.findIndex(o=>o.key===r);
+        if(idx>=0){ slots[idx].classList.add('winner'); }
+      }
+    } else {
+      statusEl.textContent = 'Klik START untuk memutar';
+      startBtn.addEventListener('click', ()=>{ spinOnce(); }, { once:true });
+    }
+  })();
+})();
+</script>
+</body>
+</html>
