@@ -30,7 +30,7 @@ body{
 .ad img{max-width:100%;height:auto;border-radius:10px;border:1px solid var(--border)}
 
 /* Board */
-.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.board{display:grid;grid-template-columns:repeat(4,minmax(4,1fr));gap:10px;margin:12px 0}
 .slot{
   padding:16px;border:1px solid var(--border);border-radius:12px;background:#fff;text-align:center;
   font-weight:800;font-size:15px;user-select:none;transition:transform .08s ease, background .08s ease, box-shadow .08s ease, color .08s ease;
@@ -193,14 +193,18 @@ body{
 
   // Daftar 12 tombol + persen (total 100). Bebas kamu ubah nilainya.
   const OPTIONS = [
+    {key:'ZOONK',    pct:0},
     {key:'CANVA',    pct:70},
     {key:'VIDIO',    pct: 0},
+    {key:'ZOONK',    pct:0},
     {key:'VIU',      pct:0},
     {key:'DUOLINGO', pct:14},
     {key:'NETFLIX',  pct: 0},
     {key:'YOUTUBE',  pct: 5},
+    {key:'ZOONK',    pct:0},
     {key:'CAPCUT',   pct: 2},
     {key:'CHATGPT',  pct: 0},
+    {key:'ZOONK',    pct:0},
     {key:'SPOTIFY',  pct: 1},
     {key:'A.MUSIC',  pct: 5},
     {key:'ZOOM',     pct: 3},
