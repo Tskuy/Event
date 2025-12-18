@@ -172,6 +172,33 @@ body::after{
 @keyframes borderSpin{
   to{transform:rotate(360deg);}
 }
+.card::after{
+  content:"";
+  position:absolute;
+  inset:8px; /* sedikit lebih ke dalam dari ::before */
+  border-radius:inherit;
+  padding:1px;
+  background:conic-gradient(
+    from 0deg,
+    rgba(244,114,182,.4),
+    rgba(59,130,246,.35),
+    rgba(34,197,94,.35),
+    rgba(234,179,8,.4),
+    rgba(244,114,182,.4)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+          mask-composite:exclude;
+  opacity:.6;
+  pointer-events:none;
+  animation:borderSpinReverse 20s linear infinite;
+}
+
+@keyframes borderSpinReverse{
+  to{ transform:rotate(-360deg); } /* kebalikan arah yg borderSpin */
+}
 
 /* Topbar */
 .topbar{
@@ -505,7 +532,7 @@ body::after{
 #regOverlay{
   position:fixed;
   inset:0;
-  background:radial-gradient(circle at 80% 0%,rgba(129,140,248,.45),transparent 60%),rgba(255,255,255,.96);
+  background:radial-gradient(circle at 80% 0%,rgba(129,140,248,.45),opacity 100%),rgba(255,255,255,.96);
   display:flex;
   align-items:center;
   justify-content:center;
