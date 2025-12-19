@@ -780,12 +780,12 @@ body::after{
   const WA_NUMBER_E164 = '6283847540571';
 
   const OPTIONS = [
-    {key:'CANVA <br> [7 Hari]',    pct:10},
-    {key:'CANVA <br> [15 Hari]',    pct:15},
-    {key:'CANVA <br> [1 Bulan]',    pct:5},
+    {key:'CANVA <br> [7 Hari]',    pct:5},
+    {key:'CANVA <br> [15 Hari]',    pct:10},
+    {key:'CANVA <br> [1 Bulan]',    pct:40},
     {key:'CANVA <br> [3 Bulan]',    pct: 0},
     {key:'CANVA <br> [1 Tahun]',      pct:0},
-    {key:'CAPCUT <br> [7 Hari]', pct:15},
+    {key:'CAPCUT <br> [7 Hari]', pct:35},
     {key:'CAPCUT <br> [14 Hari]',  pct: 0},
     {key:'CAPCUT <br> [21 Hari]',    pct:0},
     {key:'CAPCUT <br> [1 Bulan]',  pct: 0},
@@ -795,15 +795,15 @@ body::after{
     {key:'SPOTIFY <br> [3 BULAN]',  pct: 0},
     {key:'NETFLIX <br> [1U1P]',    pct:0},
     {key:'NETFLIX <br> [2U1P]',    pct:0},
-    {key:'A.MUSIC <br> [1 BULAN]',  pct: 10},
+    {key:'A.MUSIC <br> [1 BULAN]',  pct: 0},
     {key:'A.MUSIC <br> [3 BULAN]',  pct: 0},
-    {key:'ZOOM <br> [7 Hari]',    pct:5},
+    {key:'ZOOM <br> [7 Hari]',    pct:0},
     {key:'ZOOM <br> [14 Hari]',     pct: 0},
     {key:'DISNEY <br> [1 Bulan]',    pct:0},
     {key:'VIDIO <br> [Sharing]',    pct:0},
     {key:'VIDIO <br> [Private]',    pct:0},
-    {key:'VIU <br> [1 Bulan]',    pct:10},
-    {key:'VIU <br> [6 Bulan]',    pct:10},
+    {key:'VIU <br> [1 Bulan]',    pct:0},
+    {key:'VIU <br> [6 Bulan]',    pct:0},
     {key:'VIU <br> [1 Tahun]',    pct:10},
     {key:'DUOLINGO <br> [1 Bulan]',    pct:0},
     {key:'YOUTUBE <br> [1 Bulan]',    pct:10},
@@ -813,7 +813,7 @@ body::after{
   ];
   const PCT_MAP = Object.fromEntries(OPTIONS.map(o=>[o.key,o.pct]));
   const ALL_LIST = OPTIONS.map(o=>o.key);
-  const SPIN_DURATION_MS = 11000;
+  const SPIN_DURATION_MS = 15000;
 
   (function loadBg(){
     if(!BG_URL) return;
